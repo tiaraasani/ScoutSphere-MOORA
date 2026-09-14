@@ -1,68 +1,132 @@
-# CodeIgniter 4 Application Starter
+# ScoutSphere
 
-## What is CodeIgniter?
+[![CI](https://github.com/tiaraasani/ScoutSphere-MOORA/actions/workflows/ci.yml/badge.svg)](https://github.com/tiaraasani/ScoutSphere-MOORA/actions/workflows/ci.yml)
+![PHP 8.1+](https://img.shields.io/badge/PHP-8.1%2B-777bb4)
+![CodeIgniter 4.7](https://img.shields.io/badge/CodeIgniter-4.7-ef4223)
+![License MIT](https://img.shields.io/badge/license-MIT-green)
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+Decision support system that ranks candidates for **Pandega Berprestasi**
+(outstanding senior scouts) in East Kalimantan using the MOORA method.
+Built with CodeIgniter 4, MySQL, and AdminLTE.
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+![Dashboard](docs/screenshots/dashboard.png)
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+## The problem
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+Every year the regional scout council selects its best Pandega members from
+dozens of candidates scored on several criteria with different weights.
+Doing this by hand in spreadsheets is slow, hard to audit, and easy to get
+wrong when a weight or score changes. ScoutSphere turns the selection into a
+repeatable calculation: enter the criteria, enter the scores, and the ranking
+updates instantly.
 
-## Installation & updates
+## How the ranking works
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+MOORA (Multi-Objective Optimization on the basis of Ratio Analysis) is a
+multi-criteria decision method with four steps. Each step is implemented as a
+MySQL view that builds on the previous one, so the whole calculation lives in
+the database and every page reads a single view.
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+| Step | View | Formula |
+|------|------|---------|
+| 1. Normalisation | `view_normalisasi_moora` | x\*ᵢⱼ = xᵢⱼ / √(Σ xᵢⱼ²) |
+| 2. Weighting | `view_optimasi_moora` | yᵢⱼ = wⱼ · x\*ᵢⱼ |
+| 3. Optimisation | `view_skor_moora` | yᵢ = Σ benefit − Σ cost |
+| 4. Ranking | `view_hasil` | order by yᵢ descending |
 
-## Setup
+Criteria are either **benefit** (higher is better, e.g. achievements) or
+**cost** (lower is better, e.g. violations). The top three ranks are marked
+as accepted.
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+![Decision page](docs/screenshots/decision.png)
 
-## Important Change with index.php
+## Features
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+- Master data for participants, criteria (with weight and type), and the
+  decision matrix, each with server-side validation and inline error messages.
+- Calculation pages for every MOORA step, with the formula shown next to the
+  numbers so results can be checked by hand.
+- Session login with bcrypt password hashing and a constant-time failure path
+  that does not reveal whether a username exists.
+- CSRF protection on every form, destructive actions only over POST with a
+  confirmation dialog.
+- Per-IP rate limiting: 60 requests per minute globally, 5 login attempts per
+  minute.
+- Secure response headers, HTTPS and `Secure` cookies enforced in production.
+- Accessible UI: visible labels, keyboard focus rings, skip link, ARIA
+  attributes, `prefers-reduced-motion` support, and a 390 px mobile layout.
+- Indonesian interface with Indonesian validation messages.
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+| Login | Matrix |
+|-------|--------|
+| ![Login](docs/screenshots/login.png) | ![Matrix](docs/screenshots/matrix.png) |
 
-**Please** read the user guide for a better explanation of how CI4 works!
+## Tech stack
 
-## Repository Management
+| Layer | Choice |
+|-------|--------|
+| Language | PHP 8.1+ (`declare(strict_types=1)` throughout) |
+| Framework | CodeIgniter 4.7 |
+| Database | MySQL 8 / MariaDB 10.4+ (views), SQLite in tests |
+| Front end | AdminLTE 3 / Bootstrap 4 with a token-based theme layer |
+| Tests | PHPUnit 10, feature tests against an in-memory database |
+| CI | GitHub Actions: `composer audit`, lint, test on PHP 8.1 and 8.3 |
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+## Getting started
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+Requirements: PHP 8.1 or newer with `intl`, `mbstring`, `mysqli`; MySQL 8 or
+MariaDB 10.4 or newer; Composer.
 
-## Server Requirements
+```bash
+composer install
+cp .env.example .env        # fill in database credentials and ADMIN_PASSWORD
+php spark migrate           # creates all tables and the MOORA views
+php spark db:seed AdminUserSeeder
+php spark serve             # http://localhost:8080
+```
 
-PHP version 8.1 or higher is required, with the following extensions installed:
+`php spark db:seed SampleDataSeeder` loads four criteria and four
+participants so the calculation pages have something to show. Remove
+`ADMIN_PASSWORD` from `.env` once the account exists.
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+For production, point the web server document root at `public/`, set
+`CI_ENVIRONMENT = production` and `app.baseURL` in `.env`, and serve over
+HTTPS. See [`.env.example`](.env.example) for every setting.
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - If you are still using PHP 7.4 or 8.0, you should upgrade immediately.
-> - The end of life date for PHP 8.1 will be December 31, 2025.
+## Project layout
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+```
+app/
+  Controllers/   Auth, Alternative, Criteria, Matrix, Home (results)
+  Models/        one model per table, plus read-only models for each view
+  Filters/       AuthFilter (session guard), ThrottleFilter (rate limit)
+  Helpers/       form_ui_helper: inline validation markup
+  Database/      migrations (tables + views) and seeders
+  Views/         layout, pages, partials (empty state, alerts, form fields)
+public/assets/
+  css/app.css    design tokens and theme overrides
+  js/app.js      confirm dialogs, password toggle, focus handling
+tests/
+  feature/       authentication, CRUD, matrix, rate limiting
+  unit/          form helper
+```
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+## Tests
+
+```bash
+composer test
+```
+
+Feature tests run the real controllers and filters against an SQLite
+in-memory database that is migrated and seeded for every test.
+
+## Security notes
+
+- Every route except `/login` requires an authenticated session.
+- Secrets live only in `.env`, which is ignored by git.
+- Use a dedicated database user with `SELECT, INSERT, UPDATE, DELETE` only.
+- Run `composer audit` before every release; CI fails on any known advisory.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
