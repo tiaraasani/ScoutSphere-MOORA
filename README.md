@@ -1,7 +1,7 @@
 # ScoutSphere
 
 [![CI](https://github.com/tiaraasani/ScoutSphere-MOORA/actions/workflows/ci.yml/badge.svg)](https://github.com/tiaraasani/ScoutSphere-MOORA/actions/workflows/ci.yml)
-![PHP 8.1+](https://img.shields.io/badge/PHP-8.1%2B-777bb4)
+![PHP 8.2+](https://img.shields.io/badge/PHP-8.2%2B-777bb4)
 ![CodeIgniter 4.7](https://img.shields.io/badge/CodeIgniter-4.7-ef4223)
 ![License MIT](https://img.shields.io/badge/license-MIT-green)
 
@@ -65,16 +65,16 @@ as accepted.
 
 | Layer | Choice |
 |-------|--------|
-| Language | PHP 8.1+ (`declare(strict_types=1)` throughout) |
+| Language | PHP 8.2+ (`declare(strict_types=1)` throughout) |
 | Framework | CodeIgniter 4.7 |
 | Database | MySQL 8 / MariaDB 10.4+ (views), SQLite in tests |
 | Front end | AdminLTE 3 / Bootstrap 4 with a token-based theme layer |
 | Tests | PHPUnit 10, feature tests against an in-memory database |
-| CI | GitHub Actions: `composer audit`, lint, test on PHP 8.1 and 8.3 |
+| CI | GitHub Actions: `composer audit`, lint, test on PHP 8.2 and 8.3 |
 
 ## Getting started
 
-Requirements: PHP 8.1 or newer with `intl`, `mbstring`, `mysqli`; MySQL 8 or
+Requirements: PHP 8.2 or newer with `intl`, `mbstring`, `mysqli`; MySQL 8 or
 MariaDB 10.4 or newer; Composer.
 
 ```bash
