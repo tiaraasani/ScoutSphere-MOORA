@@ -1,54 +1,69 @@
 <div class="content">
   <div class="container-fluid">
-    <div class="row">
-      <div class="col-12">
-        <div class="card shadow-sm">
-          <div class="card-header bg-primary text-white">
-            <h3 class="card-title mb-0 text-center">Daftar Kriteria</h3>
-          </div>
-          <div class="card-body">
-            <!-- Tombol untuk menambah kriteria -->
-            <div class="mb-3 ">
-              <a class="btn btn-success btn-sm" href="<?php echo site_url('datakr/forminputkr'); ?>" style="width: 300px;">
-                <i class="fas fa-plus-circle"></i> Tambah Kriteria
-              </a>
-            </div>
-            <!-- Tabel Daftar Kriteria -->
-            <table class="table table-bordered table-hover table-striped">
-              <thead class="bg-light">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Daftar Kriteria <span class="count-badge ml-2"><?= count($criteria) ?></span></h2>
+        <a class="btn btn-primary btn-sm" href="<?= site_url('criteria/create') ?>">
+          <i class="fas fa-plus" aria-hidden="true"></i> Tambah Kriteria
+        </a>
+      </div>
+
+      <?php if ($criteria === []): ?>
+        <?= view('partials/empty_state', [
+            'icon'        => 'fa-sliders-h',
+            'title'       => 'Belum ada kriteria',
+            'text'        => 'Tentukan kriteria penilaian, bobotnya, dan apakah nilai tinggi itu baik (benefit) atau buruk (cost).',
+            'actionUrl'   => 'criteria/create',
+            'actionLabel' => 'Tambah kriteria pertama',
+        ]) ?>
+      <?php else: ?>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <caption class="sr-only">Daftar kriteria penilaian</caption>
+              <thead>
                 <tr>
-                  <th class="text-center" style="width: 5%;">No.</th>
-                  <th class="text-center" style="width: 15%;">Kode Kriteria</th>
-                  <th class="text-center" style="width: 30%;">Nama Kriteria</th>
-                  <th class="text-center" style="width: 15%;">Nilai Kriteria</th>
-                  <th class="text-center" style="width: 20%;">Tipe Kriteria</th>
-                  <th class="text-center" style="width: 15%;">Aksi</th>
+                  <th scope="col" class="col-index">No.</th>
+                  <th scope="col">Kode</th>
+                  <th scope="col">Nama Kriteria</th>
+                  <th scope="col" class="text-num">Bobot</th>
+                  <th scope="col">Jenis</th>
+                  <th scope="col" class="text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                <?php $no = 0;
-                foreach ($datakr as $row): $no++ ?>
+                <?php foreach ($criteria as $index => $criterion): ?>
+                  <?php $isBenefit = $criterion->jenis === 'benefit' ?>
                   <tr>
-                    <td class="text-center"><?= $no; ?></td>
-                    <td class="text-center"><?= htmlspecialchars($row->kriteria); ?></td>
-                    <td class="text-center"><?= htmlspecialchars($row->nama); ?></td>
-                    <td class="text-center"><?= htmlspecialchars($row->bobot); ?></td>
-                    <td class="text-center"><?= htmlspecialchars($row->jenis); ?></td>
-                    <td class="text-center">
-                      <a class="btn btn-warning btn-sm" href="<?php echo site_url('datakr/formeditkr/'); ?><?= $row->id; ?>">
-                        <i class="fas fa-edit"></i> Edit
+                    <td class="col-index"><?= $index + 1 ?></td>
+                    <td><code class="kode"><?= esc($criterion->kriteria) ?></code></td>
+                    <td><?= esc($criterion->nama) ?></td>
+                    <td class="text-num"><?= esc($criterion->bobot) ?></td>
+                    <td>
+                      <span class="badge <?= $isBenefit ? 'badge-benefit' : 'badge-cost' ?>">
+                        <i class="fas <?= $isBenefit ? 'fa-arrow-up' : 'fa-arrow-down' ?>" aria-hidden="true"></i>
+                        <?= $isBenefit ? 'Benefit' : 'Cost' ?>
+                      </span>
+                    </td>
+                    <td class="actions">
+                      <a class="btn btn-action" href="<?= site_url('criteria/' . esc($criterion->id, 'url') . '/edit') ?>">
+                        <i class="fas fa-pen" aria-hidden="true"></i> Edit<span class="sr-only"> <?= esc($criterion->nama) ?></span>
                       </a>
-                      <a class="btn btn-danger btn-sm" href="<?php echo site_url('datakr/hapuskr/'); ?><?= $row->id; ?>" onclick="return confirm('Apakah Anda yakin ingin menghapus kriteria ini?');">
-                        <i class="fas fa-trash-alt"></i> Hapus
-                      </a>
+                      <form action="<?= site_url('criteria/' . esc($criterion->id, 'url') . '/delete') ?>" method="post" class="d-inline"
+                            data-confirm="Hapus kriteria <?= esc($criterion->nama) ?> beserta nilai matriksnya?">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="btn btn-action btn-action-danger">
+                          <i class="fas fa-trash-alt" aria-hidden="true"></i> Hapus<span class="sr-only"> <?= esc($criterion->nama) ?></span>
+                        </button>
+                      </form>
                     </td>
                   </tr>
-                <?php endforeach; ?>
+                <?php endforeach ?>
               </tbody>
             </table>
           </div>
         </div>
-      </div>
+      <?php endif ?>
     </div>
   </div>
 </div>

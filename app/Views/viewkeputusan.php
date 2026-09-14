@@ -1,52 +1,55 @@
-<h1 class="text-center mb-1 text-success">Hasil Keputusan</h1>
-
-<section class="content">
+<?php
+// Participants ranked within the top three are accepted.
+$passingRank = 3;
+?>
+<div class="content">
   <div class="container-fluid">
-    <div class="row">
-      <div class="col-12">
-
-        <!-- Tabel Hasil Keputusan -->
-        <div class="card-body">
+    <div class="step-note">
+      <i class="fas fa-info-circle" aria-hidden="true"></i>
+      <p>Peserta diurutkan dari skor preferensi tertinggi. Tiga peringkat teratas dinyatakan <strong>Lolos</strong>.</p>
+    </div>
+    <div class="card">
+      <div class="card-header"><h2 class="card-title">Peringkat Akhir</h2></div>
+      <?php if ($rows === []): ?>
+        <?= view('partials/empty_state', [
+            'icon'        => 'fa-trophy',
+            'title'       => 'Belum ada peringkat',
+            'text'        => 'Peringkat muncul setelah matriks penilaian terisi.',
+            'actionUrl'   => 'matrix/create',
+            'actionLabel' => 'Isi matriks penilaian',
+        ]) ?>
+      <?php else: ?>
+        <div class="card-body p-0">
           <div class="table-responsive">
-            <table id="example1" class="table table-bordered table-striped">
-              <thead class="bg-success text-white">
+            <table class="table table-hover">
+              <thead>
                 <tr>
-                  <th class="text-center">No.</th>
-                  <th class="text-center">Nama Peserta</th>
-                  <th class="text-center">Hasil Nilai</th>
-                  <th class="text-center">Peringkat</th>
-                  <th class="text-center">Status Kelolosan</th>
+                  <th scope="col" class="col-index">Peringkat</th>
+                  <th scope="col">Nama Peserta</th>
+                  <th scope="col" class="text-num">Skor Preferensi</th>
+                  <th scope="col">Status</th>
                 </tr>
               </thead>
               <tbody>
-                <?php
-                  $no = 1;
-                  foreach ($datahasil as $row):
-                    // Tentukan status kelolosan berdasarkan rank_position
-                    $status_kelolosan = ($row->peringkat <= 3) ? 'Lolos' : 'Tidak Lolos';
-                ?>
-                  <tr class="text-center">
-                    <td><?= $no++; ?></td>
-                    <td><?= esc($row->nama_peserta); ?></td>
-                    <td><?= esc($row->skor_preferensi); ?></td>
-                    <td><?= esc($row->peringkat); ?></td>
+                <?php foreach ($rows as $row): ?>
+                  <?php $passed = (int) $row->peringkat <= $passingRank ?>
+                  <tr>
+                    <td><span class="rank-badge rank-<?= esc($row->peringkat) ?>"><?= esc($row->peringkat) ?></span></td>
+                    <td><strong><?= esc($row->nama_peserta) ?></strong><br><small class="text-muted"><?= esc($row->kode_peserta) ?></small></td>
+                    <td class="text-num"><?= esc($row->skor_preferensi) ?></td>
                     <td>
-                      <span class="badge <?= $status_kelolosan == 'Lolos' ? 'badge-success' : 'badge-danger'; ?>">
-                        <?= esc($status_kelolosan); ?>
+                      <span class="badge <?= $passed ? 'badge-pass' : 'badge-fail' ?>">
+                        <i class="fas <?= $passed ? 'fa-check' : 'fa-times' ?>" aria-hidden="true"></i>
+                        <?= $passed ? 'Lolos' : 'Tidak Lolos' ?>
                       </span>
                     </td>
                   </tr>
-                <?php endforeach; ?>
+                <?php endforeach ?>
               </tbody>
             </table>
           </div>
         </div>
-        <!-- /.card-body -->
-
-      </div>
-      <!-- /.col -->
+      <?php endif ?>
     </div>
-    <!-- /.row -->
   </div>
-  <!-- /.container-fluid -->
-</section>
+</div>

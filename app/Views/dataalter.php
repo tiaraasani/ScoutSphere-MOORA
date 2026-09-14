@@ -1,52 +1,59 @@
 <div class="content">
   <div class="container-fluid">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Daftar Peserta <span class="count-badge ml-2"><?= count($alternatives) ?></span></h2>
+        <a class="btn btn-primary btn-sm" href="<?= site_url('alternatives/create') ?>">
+          <i class="fas fa-plus" aria-hidden="true"></i> Tambah Peserta
+        </a>
+      </div>
 
-    <div class="row">
-      <div class="col-12">
-        <div class="card shadow-sm">
-          <div class="card-header bg-primary text-white">
-            <h3 class="card-title mb-0 text-center">Daftar Alter</h3>
-          </div>
-          <div class="card-body">
-            <div class="mb-3 ">
-              <a class="btn btn-success btn-sm" href="<?php echo site_url('dataalter/forminputalter'); ?>">
-                <i class="fas fa-plus-circle"></i> Tambah Data Alter
-              </a>
-            </div>
-            <!-- Tabel Data -->
-            <table class="table table-bordered table-hover table-striped">
-              <thead class="bg-light">
+      <?php if ($alternatives === []): ?>
+        <?= view('partials/empty_state', [
+            'icon'        => 'fa-users',
+            'title'       => 'Belum ada peserta',
+            'text'        => 'Tambahkan peserta yang akan dinilai. Kode peserta dipakai sebagai pengenal di matriks penilaian.',
+            'actionUrl'   => 'alternatives/create',
+            'actionLabel' => 'Tambah peserta pertama',
+        ]) ?>
+      <?php else: ?>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <caption class="sr-only">Daftar peserta yang dinilai</caption>
+              <thead>
                 <tr>
-                  <th class="text-center" style="width: 5%;">No.</th>
-                  <th class="text-center" style="width: 20%;">Kode</th>
-                  <th class="text-center">Nama Peserta</th>
-                  <th class="text-center" style="width: 20%;">Aksi</th>
+                  <th scope="col" class="col-index">No.</th>
+                  <th scope="col">Kode</th>
+                  <th scope="col">Nama Peserta</th>
+                  <th scope="col" class="text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                <?php $no = 0;
-                foreach ($dataalter as $row): $no++ ?>
+                <?php foreach ($alternatives as $index => $alternative): ?>
                   <tr>
-                    <td class="text-center"><?= $no; ?></td>
-                    <td class="text-center"><?= htmlspecialchars($row->kode); ?></td>
-                    <td class="text-center"><?= htmlspecialchars($row->nama); ?></td>
-                    <td class="text-center">
-                      <a class="btn btn-warning btn-sm" href="<?php echo site_url('dataalter/formeditalter/'); ?><?= $row->id; ?>">
-                        <i class="fas fa-edit"></i> Edit
+                    <td class="col-index"><?= $index + 1 ?></td>
+                    <td><code class="kode"><?= esc($alternative->kode) ?></code></td>
+                    <td><?= esc($alternative->nama) ?></td>
+                    <td class="actions">
+                      <a class="btn btn-action" href="<?= site_url('alternatives/' . esc($alternative->id, 'url') . '/edit') ?>">
+                        <i class="fas fa-pen" aria-hidden="true"></i> Edit<span class="sr-only"> <?= esc($alternative->nama) ?></span>
                       </a>
-                      <a class="btn btn-danger btn-sm" href="<?php echo site_url('dataalter/hapusalter/'); ?><?= $row->id; ?>" onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?');">
-                        <i class="fas fa-trash-alt"></i> Hapus
-                      </a>
+                      <form action="<?= site_url('alternatives/' . esc($alternative->id, 'url') . '/delete') ?>" method="post" class="d-inline"
+                            data-confirm="Hapus peserta <?= esc($alternative->nama) ?> beserta nilai matriksnya?">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="btn btn-action btn-action-danger">
+                          <i class="fas fa-trash-alt" aria-hidden="true"></i> Hapus<span class="sr-only"> <?= esc($alternative->nama) ?></span>
+                        </button>
+                      </form>
                     </td>
                   </tr>
-                <?php endforeach; ?>
+                <?php endforeach ?>
               </tbody>
             </table>
           </div>
-          <!-- /.card-body -->
         </div>
-        <!-- /.card -->
-      </div>
+      <?php endif ?>
     </div>
   </div>
-</div><!-- /.container-fluid -->
+</div>

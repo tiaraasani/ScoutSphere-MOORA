@@ -1,107 +1,88 @@
-<base href="<?php echo base_url("assets") ?>/">
-<!-- Main Sidebar Container -->
-<style>
-  .nav-sidebar .nav-link.active {
-    background-color: #1f2d3d;
-    color: #ffffff;
-  }
+<?php
+// Layout: sidebar navigation and page header.
+// Expects optional $pageTitle, $pageSubtitle and $breadcrumbs (label => url|null).
+$pageTitle    = $pageTitle ?? 'Dashboard';
+$pageSubtitle = $pageSubtitle ?? null;
+$breadcrumbs  = $breadcrumbs ?? [];
+$username     = (string) (session()->get('username') ?? 'admin');
+$initials     = mb_strtoupper(mb_substr($username, 0, 2));
 
-  .nav-sidebar .nav-link:hover {
-    background-color: #343a40;
-    color: #ffffff;
-  }
-
-  .nav-treeview>.nav-item>.nav-link {
-    padding-left: 40px;
-  }
-</style>
-
+$menu = [
+    'Utama' => [
+        ['label' => 'Dashboard', 'url' => '/', 'icon' => 'fa-home', 'match' => '/'],
+    ],
+    'Master Data' => [
+        ['label' => 'Data Peserta', 'url' => 'alternatives', 'icon' => 'fa-users', 'match' => 'alternatives*'],
+        ['label' => 'Data Kriteria', 'url' => 'criteria', 'icon' => 'fa-sliders-h', 'match' => 'criteria*'],
+        ['label' => 'Matriks Penilaian', 'url' => 'matrix', 'icon' => 'fa-table', 'match' => 'matrix*'],
+    ],
+    'Perhitungan MOORA' => [
+        ['label' => 'Normalisasi', 'url' => 'results/normalization', 'icon' => 'fa-calculator', 'match' => 'results/normalization'],
+        ['label' => 'Normalisasi Berbobot', 'url' => 'results/weighted', 'icon' => 'fa-balance-scale', 'match' => 'results/weighted'],
+        ['label' => 'Hasil Optimasi', 'url' => 'results/optimization', 'icon' => 'fa-chart-line', 'match' => 'results/optimization'],
+        ['label' => 'Hasil Keputusan', 'url' => 'results/decision', 'icon' => 'fa-trophy', 'match' => 'results/decision'],
+    ],
+];
+?>
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
+  <a href="<?= site_url('/') ?>" class="brand-link">
+    <span class="brand-mark" aria-hidden="true"><i class="fas fa-campground"></i></span>
+    <span class="brand-text">ScoutSphere<small>Pandega Berprestasi</small></span>
+  </a>
 
   <div class="sidebar">
-    <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-      <div class="image">
-        <img src="dist/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
-      </div>
-      <div class="info">
-        <a href="#" class="d-block">Informatika</a>
-      </div>
-    </div>
-
-    <!-- Sidebar Menu -->
-    <nav class="mt-2">
-      <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-
-        <li class="nav-item">
-          <a href="<?php echo site_url('Home/home'); ?>" class="nav-link <?= (uri_string() == 'Home/home') ? 'active' : '' ?>">
-            <i class="nav-icon fas fa-th"></i>
-            <p>Home</p>
-          </a>
-        </li>
-
-        <li class="nav-item <?= (uri_string() == 'datajs/view' || uri_string() == 'dataalter/view' || uri_string() == 'dataalter/forminputalter' || uri_string() == 'datakriteria/view' || uri_string() == 'databobot/view') ? 'menu-open' : '' ?>">
-          <a href="#" class="nav-link <?= (uri_string() == 'datajs/view' || uri_string() == 'dataalter/view' || uri_string() == 'datakriteria/view' || uri_string() == 'databobot/view') ? 'active' : '' ?>">
-            <i class="nav-icon fas fa-list"></i>
-            <p>
-              Master Data
-              <i class="fas fa-angle-left right"></i>
-            </p>
-          </a>
-          <ul class="nav nav-treeview">
+    <nav aria-label="Menu utama">
+      <ul class="nav nav-pills nav-sidebar flex-column" role="menu">
+        <?php foreach ($menu as $section => $items): ?>
+          <li class="nav-section-label" aria-hidden="true"><?= esc($section) ?></li>
+          <?php foreach ($items as $item): ?>
+            <?php $active = url_is($item['match']) ?>
             <li class="nav-item">
-              <a href="<?php echo site_url('dataalter/view'); ?>" class="nav-link <?= (uri_string() == 'dataalter/view') ? 'active' : '' ?>">
-                <i class="fas fa-store"></i>
-                <p>Data Peserta</p>
+              <a href="<?= site_url($item['url']) ?>" class="nav-link <?= $active ? 'active' : '' ?>" <?= $active ? 'aria-current="page"' : '' ?>>
+                <i class="nav-icon fas <?= esc($item['icon']) ?>" aria-hidden="true"></i>
+                <p><?= esc($item['label']) ?></p>
               </a>
             </li>
-            <li class="nav-item">
-              <a href="<?php echo site_url('datakriteria/view'); ?>" class="nav-link <?= (uri_string() == 'datakriteria/view') ? 'active' : '' ?>">
-                <i class="fas fa-chart-bar"></i>
-                <p>Data Kriteria</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="<?php echo site_url('datamatriks/view'); ?>" class="nav-link <?= (uri_string() == 'datamatriks/view') ? 'active' : '' ?>">
-                <i class="fas fa-hammer"></i>
-                <p>Matriks</p>
-              </a>
-            </li>  
-          </ul>
-        </li>
-
-        <li class="nav-item">
-          <a href="<?php echo site_url('Home/callviewnormalisasi'); ?>" class="nav-link <?= (uri_string() == 'Home/callviewnormalisasi') ? 'active' : '' ?>">
-            <i class="nav-icon fas fa-edit"></i>
-            <p>Hitung Normalisasi</p>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="<?php echo site_url('Home/callviewoptimasi'); ?>" class="nav-link <?= (uri_string() == 'Home/callviewoptimasi') ? 'active' : '' ?>">
-            <i class="nav-icon fas fa-edit"></i>
-            <p>Nilai Optimasi</p>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="<?php echo site_url('Home/callviewhasil'); ?>" class="nav-link <?= (uri_string() == 'Home/callviewhasil') ? 'active' : '' ?>">
-            <i class="nav-icon fas fa-edit"></i>
-            <p>Hitung Optimasi</p>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="<?php echo site_url('Home/callviewkeputusan'); ?>" class="nav-link <?= (uri_string() == 'Home/callviewkeputusan') ? 'active' : '' ?>">
-            <i class="nav-icon fas fa-edit"></i>
-            <p>Hasil Keputusan</p>
-          </a>
-        </li>
+          <?php endforeach ?>
+        <?php endforeach ?>
       </ul>
     </nav>
+
+    <div class="sidebar-footer">
+      <span class="avatar" aria-hidden="true"><?= esc($initials) ?></span>
+      <div>
+        <div class="name"><?= esc($username) ?></div>
+        <div class="role">Administrator</div>
+      </div>
+    </div>
   </div>
 </aside>
 
-<!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
-  <!-- Content Header (Page header) -->
-  <div class="content-header">
-
-  </div>
-  <!-- /.content-header -->
+  <main id="main-content" tabindex="-1">
+    <div class="content-header">
+      <div class="container-fluid">
+        <div class="page-header">
+          <nav aria-label="Breadcrumb">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="<?= site_url('/') ?>">Dashboard</a></li>
+              <?php $lastLabel = array_key_last($breadcrumbs) ?>
+              <?php foreach ($breadcrumbs as $label => $url): ?>
+                <?php if ($label === $lastLabel): ?>
+                  <li class="breadcrumb-item active" aria-current="page"><?= esc($label) ?></li>
+                <?php elseif ($url === null): ?>
+                  <li class="breadcrumb-item"><?= esc($label) ?></li>
+                <?php else: ?>
+                  <li class="breadcrumb-item"><a href="<?= site_url($url) ?>"><?= esc($label) ?></a></li>
+                <?php endif ?>
+              <?php endforeach ?>
+            </ol>
+          </nav>
+          <h1 class="page-title"><?= esc($pageTitle) ?></h1>
+          <?php if ($pageSubtitle !== null): ?>
+            <p class="page-subtitle"><?= esc($pageSubtitle) ?></p>
+          <?php endif ?>
+        </div>
+        <?= view('partials/alerts') ?>
+      </div>
+    </div>

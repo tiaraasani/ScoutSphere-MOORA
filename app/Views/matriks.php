@@ -1,77 +1,72 @@
 <div class="content">
   <div class="container-fluid">
-    <div class="row">
-      <div class="col-12">
-        <div class="card shadow-sm">
-          <div class="card-header bg-primary text-white">
-            <h3 class="card-title mb-0 text-center">Daftar Matriks</h3>
-          </div>
-          <div class="card-body">
-            <!-- Tombol untuk menambah matriks -->
-            <div class="mb-3 ">
-              <a class="btn btn-success btn-sm" href="<?php echo site_url('datamatriks/forminputmatriks'); ?>" style="width: 200px;">
-                <i class="fas fa-plus-circle"></i> Tambah Matriks
-              </a>
-            </div>
-            <!-- Tabel Daftar Matriks -->
-            <table class="table table-bordered table-hover table-striped">
-              <thead class="bg-light">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Matriks Penilaian <span class="count-badge ml-2"><?= count($alternatives) ?> peserta</span></h2>
+        <a class="btn btn-primary btn-sm" href="<?= site_url('matrix/create') ?>">
+          <i class="fas fa-plus" aria-hidden="true"></i> Tambah Penilaian
+        </a>
+      </div>
+
+      <?php if ($criteria === []): ?>
+        <?= view('partials/empty_state', [
+            'icon'        => 'fa-sliders-h',
+            'title'       => 'Kriteria belum ada',
+            'text'        => 'Matriks membutuhkan minimal satu kriteria. Buat kriteria terlebih dahulu.',
+            'actionUrl'   => 'criteria/create',
+            'actionLabel' => 'Tambah kriteria',
+        ]) ?>
+      <?php elseif ($alternatives === []): ?>
+        <?= view('partials/empty_state', [
+            'icon'        => 'fa-table',
+            'title'       => 'Belum ada peserta yang dinilai',
+            'text'        => 'Pilih peserta lalu isi nilainya pada setiap kriteria.',
+            'actionUrl'   => 'matrix/create',
+            'actionLabel' => 'Tambah penilaian',
+        ]) ?>
+      <?php else: ?>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <caption class="sr-only">Nilai setiap peserta pada setiap kriteria</caption>
+              <thead>
                 <tr>
-                  <th class="text-center" style="width: 5%;">No.</th>
-                  <th class="text-center" style="width: 15%;">Kode Peserta</th>
-                  <?php foreach ($kriteria as $k): ?>
-                    <th class="text-center"><?= $k->kriteria; ?></th>
-                  <?php endforeach; ?>
-                  <th class="text-center" style="width: 15%;">Aksi</th>
+                  <th scope="col" class="col-index">No.</th>
+                  <th scope="col">Peserta</th>
+                  <?php foreach ($criteria as $criterion): ?>
+                    <th scope="col" class="text-num" title="<?= esc($criterion->nama) ?>"><?= esc($criterion->kriteria) ?></th>
+                  <?php endforeach ?>
+                  <th scope="col" class="text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                <?php $no = 1; ?>
-                <?php foreach ($alternatif as $alt): ?>
-                  <?php
-                  // Periksa apakah peserta memiliki data di tabel matriks
-                  $datapeserta = false;
-                  foreach ($datamatriks as $dm) {
-                    if ($dm->id_peserta == $alt->id) {
-                      $datapeserta = true;
-                      break;
-                    }
-                  }
-                  ?>
-                  <?php if ($datapeserta): // Tampilkan hanya jika peserta memiliki data di matriks 
-                  ?>
-                    <tr>
-                      <td class="text-center"><?= $no++; ?></td>
-                      <td class="text-center"><?= $alt->kode; ?></td>
-                      <?php foreach ($kriteria as $k): ?>
-                        <?php
-                        // Cari nilai yang sesuai di matriks
-                        $nilai = '-';
-                        foreach ($datamatriks as $dm) {
-                          if ($dm->id_peserta == $alt->id && $dm->id_kriteria == $k->id) {
-                            $nilai = $dm->nilai;
-                            break;
-                          }
-                        }
-                        ?>
-                        <td class="text-center"><?= $nilai; ?></td>
-                      <?php endforeach; ?>
-                      <td class="text-center">
-                        <a href="<?= site_url('datamatriks/formeditmatriks/' . $alt->id); ?>" class="btn btn-primary btn-sm">
-                          <i class="fas fa-edit"></i> Edit
-                        </a>
-                        <a href="<?= site_url('datamatriks/hapusmatriks/' . $alt->id); ?>" class="btn btn-danger btn-sm" onclick="return confirm('Yakin ingin menghapus data ini?')">
-                          <i class="fas fa-trash-alt"></i> Hapus
-                        </a>
-                      </td>
-                    </tr>
-                  <?php endif; ?>
-                <?php endforeach; ?>
+                <?php $number = 1 ?>
+                <?php foreach ($alternatives as $alternative): ?>
+                  <tr>
+                    <td class="col-index"><?= $number++ ?></td>
+                    <td><strong><?= esc($alternative->nama) ?></strong><br><small class="text-muted"><?= esc($alternative->kode) ?></small></td>
+                    <?php foreach ($criteria as $criterion): ?>
+                      <td class="text-num"><?= esc($values[$alternative->id][$criterion->id] ?? '-') ?></td>
+                    <?php endforeach ?>
+                    <td class="actions">
+                      <a href="<?= site_url('matrix/' . esc($alternative->id, 'url') . '/edit') ?>" class="btn btn-action">
+                        <i class="fas fa-pen" aria-hidden="true"></i> Edit<span class="sr-only"> nilai <?= esc($alternative->nama) ?></span>
+                      </a>
+                      <form action="<?= site_url('matrix/' . esc($alternative->id, 'url') . '/delete') ?>" method="post" class="d-inline"
+                            data-confirm="Hapus seluruh nilai penilaian <?= esc($alternative->nama) ?>?">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="btn btn-action btn-action-danger">
+                          <i class="fas fa-trash-alt" aria-hidden="true"></i> Hapus<span class="sr-only"> nilai <?= esc($alternative->nama) ?></span>
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                <?php endforeach ?>
               </tbody>
             </table>
           </div>
         </div>
-      </div>
+      <?php endif ?>
     </div>
-  </div><!-- /.container-fluid -->
+  </div>
 </div>
