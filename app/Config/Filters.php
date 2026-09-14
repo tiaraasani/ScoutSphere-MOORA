@@ -2,6 +2,8 @@
 
 namespace Config;
 
+use App\Filters\AuthFilter;
+use App\Filters\ThrottleFilter;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
@@ -34,6 +36,8 @@ class Filters extends BaseFilters
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
+        'auth'          => AuthFilter::class,
+        'throttle'      => ThrottleFilter::class,
     ];
 
     /**
@@ -65,17 +69,18 @@ class Filters extends BaseFilters
      * List of filter aliases that are always
      * applied before and after every request.
      *
-     * @var array<string, array<string, array<string, string>>>|array<string, list<string>>
+     * @var array{
+     *     before: array<string, array{except: list<string>|string}>|list<string>,
+     *     after: array<string, array{except: list<string>|string}>|list<string>
+     * }
      */
     public array $globals = [
         'before' => [
-            // 'honeypot',
-            // 'csrf',
-            // 'invalidchars',
+            'throttle', // 60 requests per minute per IP and path
+            'csrf',
         ],
         'after' => [
-            // 'honeypot',
-            // 'secureheaders',
+            'secureheaders',
         ],
     ];
 
