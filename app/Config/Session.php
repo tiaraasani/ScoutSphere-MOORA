@@ -14,6 +14,7 @@ class Session extends BaseConfig
      * --------------------------------------------------------------------------
      *
      * The session storage driver to use:
+     * - `CodeIgniter\Session\Handlers\ArrayHandler` (for testing)
      * - `CodeIgniter\Session\Handlers\FileHandler`
      * - `CodeIgniter\Session\Handlers\DatabaseHandler`
      * - `CodeIgniter\Session\Handlers\MemcachedHandler`
@@ -89,7 +90,7 @@ class Session extends BaseConfig
      * when auto-regenerating the session ID. When set to FALSE, the data
      * will be later deleted by the garbage collector.
      */
-    public bool $regenerateDestroy = false;
+    public bool $regenerateDestroy = true;
 
     /**
      * --------------------------------------------------------------------------
