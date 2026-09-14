@@ -1,71 +1,72 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controllers;
 
-use App\Models\altermodel;
-use App\Models\datahasiloptimasi_model;
-use App\Models\kriteriamodel;
-use App\Models\datanormalisasi_model;
-use App\Models\datakeputusan_model;
-use App\Models\dataoptimasi_model;
+use App\Models\AlternativeModel;
+use App\Models\CriteriaModel;
+use App\Models\MatrixModel;
+use App\Models\NormalizationModel;
+use App\Models\ResultModel;
+use App\Models\WeightedNormalizationModel;
 
+/**
+ * Dashboard and MOORA calculation result pages.
+ */
 class Home extends BaseController
 {
-    // public function index(): string
-    // {
-    //     return view('welcome_message');
-    // }
-    public function __construct() {
-        $this->altermodel = new altermodel(); // Load model
-        $this->kriteriamodel = new kriteriamodel(); // Load model
-    }
-    public function index()
-    {
-        $data['jumlah_alter'] = $this->altermodel->countalter();
-        $data['jumlah_kriteria'] = $this->kriteriamodel->countkriteria();
-        echo view('Admin_header');
-        echo view('Admin_nav');
-        echo view('home', $data);
-        echo view('Admin_footer');
-    }
-    public function callviewoptimasi()
-    {
-        $optimasi = new dataoptimasi_model();
-        $dataopt = $optimasi->tampiloptimasi();
-        $data = array('dataopt' => $dataopt);
-        echo view('Admin_header');
-        echo view('Admin_nav');
-        echo view('viewoptimasi', $data);
-        echo view('Admin_footer');
-    }
-    public function callviewnormalisasi(){
-        $normalisasi = new datanormalisasi_model();
-        $datanorm = $normalisasi->tampilnormalisasi();
-        $data = array('datanorm' => $datanorm);
-        echo view('Admin_header');
-        echo view('Admin_nav');
-        echo view('viewnormalisasi', $data);
-        echo view('Admin_footer');
-    }
-    public function callviewhasil(){
-        $mb = new datahasiloptimasi_model();
-        $datamb = $mb->tampilhasil();
-        $data = array('datahasil'=>$datamb);
+    private const DASHBOARD_TOP_RESULTS = 3;
 
-        echo view('Admin_header');
-        echo view('Admin_nav');
-        echo view('viewhasilopt', $data);
-        echo view('Admin_footer');
+    public function index(): string
+    {
+        return $this->render('Home', [
+            'pageTitle'        => 'Dashboard',
+            'pageSubtitle'     => 'Ringkasan data penilaian Pandega Berprestasi wilayah Kalimantan Timur.',
+            'alternativeCount' => (new AlternativeModel())->countAll(),
+            'criteriaCount'    => (new CriteriaModel())->countAll(),
+            'matrixCount'      => (new MatrixModel())->countAlternatives(),
+            'topResults'       => array_slice((new ResultModel())->findRanked(), 0, self::DASHBOARD_TOP_RESULTS),
+        ]);
     }
-    public function callviewkeputusan(){
-        $mb = new datahasiloptimasi_model();
-        $datamb = $mb->tampilhasil();
-        $data = array('datahasil'=>$datamb);
 
-        echo view('Admin_header');
-        echo view('Admin_nav');
-        echo view('viewkeputusan', $data);
-        echo view('Admin_footer');
+    public function normalization(): string
+    {
+        return $this->render('viewnormalisasi', [
+            'pageTitle'    => 'Hasil Normalisasi',
+            'pageSubtitle' => 'Langkah 1 MOORA: setiap nilai dibagi akar jumlah kuadrat nilai pada kriteria yang sama.',
+            'breadcrumbs'  => ['Perhitungan' => null, 'Normalisasi' => null],
+            'rows'         => (new NormalizationModel())->findAll(),
+        ]);
     }
-    
+
+    public function weightedNormalization(): string
+    {
+        return $this->render('viewoptimasi', [
+            'pageTitle'    => 'Normalisasi Berbobot',
+            'pageSubtitle' => 'Langkah 2 MOORA: nilai ternormalisasi dikalikan bobot kriteria.',
+            'breadcrumbs'  => ['Perhitungan' => null, 'Normalisasi Berbobot' => null],
+            'rows'         => (new WeightedNormalizationModel())->findAll(),
+        ]);
+    }
+
+    public function optimization(): string
+    {
+        return $this->render('viewhasilopt', [
+            'pageTitle'    => 'Hasil Optimasi',
+            'pageSubtitle' => 'Langkah 3 MOORA: jumlah kriteria benefit dikurangi jumlah kriteria cost.',
+            'breadcrumbs'  => ['Perhitungan' => null, 'Optimasi' => null],
+            'rows'         => (new ResultModel())->findRanked(),
+        ]);
+    }
+
+    public function decision(): string
+    {
+        return $this->render('viewkeputusan', [
+            'pageTitle'    => 'Hasil Keputusan',
+            'pageSubtitle' => 'Peringkat akhir peserta berdasarkan skor preferensi MOORA.',
+            'breadcrumbs'  => ['Perhitungan' => null, 'Keputusan' => null],
+            'rows'         => (new ResultModel())->findRanked(),
+        ]);
+    }
 }

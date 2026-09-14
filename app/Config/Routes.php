@@ -5,36 +5,43 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-$routes->get('/', 'Home::index');
-$routes->get('Home/home', 'Home::index');
 
-//dataalter
-$routes->get('dataalter/view', 'altercontroller::viewalter');
-$routes->get('dataalter/forminputalter', 'altercontroller::inputalter');
-$routes->post('dataalter/simpanalter', 'altercontroller::simpanalter');
-$routes->get('dataalter/formeditalter/(:num)', 'altercontroller::formeditalter/$1');
-$routes->post('dataalter/editalter/(:num)', 'altercontroller::editalter/$1');
-$routes->get('dataalter/hapusalter/(:num)', 'altercontroller::hapusalter/$1');
+// Authentication (public)
+$routes->get('login', 'AuthController::login');
+$routes->post('login', 'AuthController::attempt', ['filter' => 'throttle:5']);
+$routes->post('logout', 'AuthController::logout');
 
-//data matriks
-$routes->get('datamatriks/view', 'matrikscontroller::viewmatriks');
-$routes->get('datamatriks/forminputmatriks', 'matrikscontroller::inputmatriks');
-$routes->post('datamatriks/simpanmatriks', 'matrikscontroller::simpanmatriks');
-$routes->get('datamatriks/formeditmatriks/(:num)', 'matrikscontroller::formeditmatriks/$1');
-$routes->post('datamatriks/editmatriks/(:num)', 'matrikscontroller::editmatriks/$1');
-$routes->get('datamatriks/hapusmatriks/(:num)', 'matrikscontroller::hapusmatriks/$1');
+// Everything else requires a signed-in user
+$routes->group('', ['filter' => 'auth'], static function (RouteCollection $routes): void {
+    $routes->get('/', 'Home::index');
 
+    // Alternatives (participants)
+    $routes->get('alternatives', 'AlternativeController::index');
+    $routes->get('alternatives/create', 'AlternativeController::create');
+    $routes->post('alternatives', 'AlternativeController::store');
+    $routes->get('alternatives/(:num)/edit', 'AlternativeController::edit/$1');
+    $routes->post('alternatives/(:num)/update', 'AlternativeController::update/$1');
+    $routes->post('alternatives/(:num)/delete', 'AlternativeController::delete/$1');
 
-//data kriteria
-$routes->get('datakriteria/view', 'kriteriacontroller::viewkriteria');
-$routes->get('datakr/forminputkr', 'kriteriacontroller::inputkr');
-$routes->post('datakr/simpankr', 'kriteriacontroller::simpankr');
-$routes->get('datakr/formeditkr/(:num)', 'kriteriacontroller::formeditkr/$1');
-$routes->post('datakr/editkr/(:num)', 'kriteriacontroller::editkr/$1');
-$routes->get('datakr/hapuskr/(:num)', 'kriteriacontroller::hapuskr/$1');
+    // Criteria
+    $routes->get('criteria', 'CriteriaController::index');
+    $routes->get('criteria/create', 'CriteriaController::create');
+    $routes->post('criteria', 'CriteriaController::store');
+    $routes->get('criteria/(:num)/edit', 'CriteriaController::edit/$1');
+    $routes->post('criteria/(:num)/update', 'CriteriaController::update/$1');
+    $routes->post('criteria/(:num)/delete', 'CriteriaController::delete/$1');
 
-//perhitungan
-$routes->get('Home/callviewoptimasi', 'Home::callviewoptimasi');
-$routes->get('Home/callviewnormalisasi', 'Home::callviewnormalisasi');
-$routes->get('Home/callviewhasil', 'Home::callviewhasil');
-$routes->get('Home/callviewkeputusan', 'Home::callviewkeputusan');
+    // Decision matrix (keyed by alternative id)
+    $routes->get('matrix', 'MatrixController::index');
+    $routes->get('matrix/create', 'MatrixController::create');
+    $routes->post('matrix', 'MatrixController::store');
+    $routes->get('matrix/(:num)/edit', 'MatrixController::edit/$1');
+    $routes->post('matrix/(:num)/update', 'MatrixController::update/$1');
+    $routes->post('matrix/(:num)/delete', 'MatrixController::delete/$1');
+
+    // MOORA calculation results
+    $routes->get('results/normalization', 'Home::normalization');
+    $routes->get('results/weighted', 'Home::weightedNormalization');
+    $routes->get('results/optimization', 'Home::optimization');
+    $routes->get('results/decision', 'Home::decision');
+});

@@ -1,21 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controllers;
 
 use CodeIgniter\Controller;
+use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\HTTP\CLIRequest;
 use CodeIgniter\HTTP\IncomingRequest;
+use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
+use CodeIgniter\Model;
 use Psr\Log\LoggerInterface;
 
 /**
- * Class BaseController
- *
- * BaseController provides a convenient place for loading components
- * and performing functions that are needed by all your controllers.
- * Extend this class in any new controllers:
- *     class Home extends BaseController
+ * Shared behaviour for every controller in the application.
  *
  * For security be sure to declare any new methods as protected or private.
  */
@@ -29,30 +29,56 @@ abstract class BaseController extends Controller
     protected $request;
 
     /**
-     * An array of helpers to be loaded automatically upon
-     * class instantiation. These helpers will be available
-     * to all other controllers that extend BaseController.
+     * Helpers loaded automatically for every controller.
      *
      * @var list<string>
      */
-    protected $helpers = [];
+    protected $helpers = ['form_ui'];
 
-    /**
-     * Be sure to declare properties for any property fetch you initialized.
-     * The creation of dynamic property is deprecated in PHP 8.2.
-     */
-    // protected $session;
-
-    /**
-     * @return void
-     */
-    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
+    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
-        // Do Not Edit This Line
         parent::initController($request, $response, $logger);
+    }
 
-        // Preload any models, libraries, etc, here.
+    /**
+     * Renders a page inside the admin layout.
+     *
+     * Layout data understood by the header and navigation views:
+     *  - pageTitle    (string)            shown in the browser tab and page header
+     *  - pageSubtitle (string, optional)  one-line description under the title
+     *  - breadcrumbs  (array, optional)   label => url (null for the current page)
+     *
+     * @param array<string, mixed> $data
+     */
+    protected function render(string $view, array $data = []): string
+    {
+        return view('Admin_header', $data)
+            . view('Admin_nav', $data)
+            . view($view, $data)
+            . view('Admin_footer', $data);
+    }
 
-        // E.g.: $this->session = \Config\Services::session();
+    /**
+     * Returns one record by id, or raises a 404 when it does not exist.
+     */
+    protected function findOrFail(Model $model, int $id): object
+    {
+        $record = $model->find($id);
+
+        if ($record === null) {
+            throw PageNotFoundException::forPageNotFound();
+        }
+
+        return $record;
+    }
+
+    /**
+     * Sends the user back to the form with their input and the validation errors.
+     *
+     * Call only after `validate()` has returned false.
+     */
+    protected function validationFailed(): RedirectResponse
+    {
+        return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
     }
 }
